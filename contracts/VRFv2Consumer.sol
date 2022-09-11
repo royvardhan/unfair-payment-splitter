@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
 
 /**
  * THIS IS AN EXAMPLE CONTRACT THAT USES HARDCODED VALUES FOR CLARITY.
@@ -39,7 +40,10 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
 
   // For this example, retrieve 2 random values in one request.
   // Cannot exceed VRFCoordinatorV2.MAX_NUM_WORDS.
-  uint32 numWords =  2;
+  uint32 numShares;
+
+  address[] public payees; 
+  uint256[] public shares;
 
   uint256[] public s_randomWords;
   uint256 public s_requestId;
@@ -52,14 +56,16 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
   }
 
   // Assumes the subscription is funded sufficiently.
-  function requestRandomWords() external onlyOwner {
+  function requestRandomWords(address[] memory _payees, uint32 _numShares) external onlyOwner {
     // Will revert if subscription is not set and funded.
+    numShares = _numShares;
+    payees = _payees;
     s_requestId = COORDINATOR.requestRandomWords(
       keyHash,
       s_subscriptionId,
       requestConfirmations,
       callbackGasLimit,
-      numWords
+      numShares
     );
   }
 
@@ -70,8 +76,21 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     s_randomWords = randomWords;
   }
 
+  function createPaymentSplitter() internal returns(address) {
+    PaymentSplitter paymentSplitter = new PaymentSplitter(payees, shares);
+    return address(paymentSplitter);
+  }
+
+  function testerFunc() public view returns (uint256) {
+    return s_randomWords[0];
+  }
+
   modifier onlyOwner() {
     require(msg.sender == s_owner);
     _;
   }
 }
+
+// Couse of Action: In the requestRandomWords function,the user must also provide the addresses and the number of shares
+// 
+
