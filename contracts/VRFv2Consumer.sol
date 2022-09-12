@@ -56,10 +56,10 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
   }
 
   // Assumes the subscription is funded sufficiently.
-  function requestRandomWords(address[] memory _payees, uint32 _numShares) external onlyOwner {
+  function handleDeployment(address[] memory _payees) external onlyOwner {
     // Will revert if subscription is not set and funded.
-    numShares = _numShares;
     payees = _payees;
+    numShares = uint32 (payees.length);
     s_requestId = COORDINATOR.requestRandomWords(
       keyHash,
       s_subscriptionId,
@@ -74,15 +74,23 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     uint256[] memory randomWords
   ) internal override {
     s_randomWords = randomWords;
+    for (uint256 i = 0; i < s_randomWords.length; i++) {
+      uint256 share = s_randomWords[i] % 100;
+      shares.push(share);
+    }
+    createPaymentSplitter();
   }
 
   function createPaymentSplitter() internal returns(address) {
+    
     PaymentSplitter paymentSplitter = new PaymentSplitter(payees, shares);
     return address(paymentSplitter);
   }
 
-  function testerFunc() public view returns (uint256) {
-    return s_randomWords[0];
+  function testerFunction() public view returns (uint256) {
+    for(uint256 i = 0; i < s_randomWords.length; i++) {
+      return s_randomWords[i];
+    }
   }
 
   modifier onlyOwner() {
