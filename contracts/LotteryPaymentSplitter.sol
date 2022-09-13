@@ -86,9 +86,13 @@ contract LotteryPaymentSplitter is VRFConsumerBaseV2 {
     paymentSplitter = new PaymentSplitter(payees, shares);
   }
 
-  // function release(address _payee) public {
-  //   paymentSplitter.release(_payee);
-  // }
+  function release(address payable _payee) public {
+   paymentSplitter.release(_payee);
+  }
+
+  function release(IERC20 token, address account) public {
+    paymentSplitter.release(token, account);
+  }
 
   function addressPaymentSplitter() public view returns(address) {
     return address(paymentSplitter);
