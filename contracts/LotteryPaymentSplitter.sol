@@ -12,8 +12,9 @@ import "@openzeppelin/contracts/finance/PaymentSplitter.sol";
  * DO NOT USE THIS CODE IN PRODUCTION.
  */
 
-contract VRFv2Consumer is VRFConsumerBaseV2 {
+contract LotteryPaymentSplitter is VRFConsumerBaseV2 {
   VRFCoordinatorV2Interface COORDINATOR;
+  PaymentSplitter paymentSplitter;
 
   // Your subscription ID.
   uint64 s_subscriptionId;
@@ -33,7 +34,7 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
   // this limit based on the network that you select, the size of the request,
   // and the processing of the callback request in the fulfillRandomWords()
   // function.
-  uint32 callbackGasLimit = 100000;
+  uint32 callbackGasLimit = 300000;
 
   // The default is 3, but you can set this higher.
   uint16 requestConfirmations = 3;
@@ -59,7 +60,7 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
   function handleDeployment(address[] memory _payees) external onlyOwner {
     // Will revert if subscription is not set and funded.
     payees = _payees;
-    numShares = uint32 (payees.length);
+    numShares = uint32 (_payees.length);
     s_requestId = COORDINATOR.requestRandomWords(
       keyHash,
       s_subscriptionId,
@@ -81,17 +82,21 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
     createPaymentSplitter();
   }
 
-  function createPaymentSplitter() internal returns(address) {
-    
-    PaymentSplitter paymentSplitter = new PaymentSplitter(payees, shares);
+  function createPaymentSplitter() internal {
+    paymentSplitter = new PaymentSplitter(payees, shares);
+  }
+
+  function addressPaymentSplitter() public view returns(address) {
     return address(paymentSplitter);
   }
 
-  function testerFunction() public view returns (uint256) {
-    for(uint256 i = 0; i < s_randomWords.length; i++) {
-      return s_randomWords[i];
+  function getTotalShares() public view returns(uint) {
+        uint totalShares;
+        for (uint i = 0; i < shares.length; i++) {
+            totalShares = totalShares + shares[i];
+        }
+        return totalShares;
     }
-  }
 
   modifier onlyOwner() {
     require(msg.sender == s_owner);
@@ -101,4 +106,3 @@ contract VRFv2Consumer is VRFConsumerBaseV2 {
 
 // Couse of Action: In the requestRandomWords function,the user must also provide the addresses and the number of shares
 // 
-
