@@ -90,7 +90,7 @@ contract LotteryPaymentSplitter is VRFConsumerBaseV2 {
    paymentSplitter.release(_payee);
   }
 
-  function release(IERC20 token, address account) public {
+  function releaseERC20(IERC20 token, address account) public {
     paymentSplitter.release(token, account);
   }
 
